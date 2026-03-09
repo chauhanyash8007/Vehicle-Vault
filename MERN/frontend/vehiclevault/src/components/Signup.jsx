@@ -45,7 +45,7 @@ const Signup = () => {
 
     if (Object.keys(validationErrors).length === 0) {
 
-      // redirect to home
+      // redirect to Home
       navigate("/Home");
 
     }
