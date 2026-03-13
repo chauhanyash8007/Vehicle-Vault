@@ -6,6 +6,8 @@ import { AdminSidebar } from "../components/admin/AdminSidebar";
 import { CarList } from "../components/user/CarList";
 import { CarDetail } from "../components/user/CarDetail";
 import { AllUserList } from "../components/admin/AllUserList";
+import { GetApiDemo } from "../components/user/GetApiDemo";
+import { UseEffectDemo } from "../components/user/UseEffectDemo";
 
 const router = createBrowserRouter([
   { path: "/", element: <Login /> },
@@ -17,6 +19,8 @@ const router = createBrowserRouter([
     children: [
       { path: "carlist", element: <CarList /> },
       { path: "cardetail", element: <CarDetail /> },
+      { path: "getapidemo1", element: <GetApiDemo /> },
+      { path: "useeffectdemo", element: <UseEffectDemo /> },
     ],
   },
   {

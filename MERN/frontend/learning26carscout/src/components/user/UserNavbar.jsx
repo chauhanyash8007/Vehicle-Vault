@@ -19,13 +19,13 @@ export const UserNavbar = () => {
           {/* DESKTOP MENU */}
           <ul className="hidden md:flex gap-6 items-center font-medium">
             <li>
-              <Link to="/user/dashboard" className="hover:text-blue-500">
-                Dashboard
+              <Link to="/user/getapidemo1" className="hover:text-blue-500">
+                GET API DEMO 1
               </Link>
             </li>
             <li>
-              <Link to="/user/profile" className="hover:text-blue-500">
-                Profile
+             <Link to="/user/useeffectdemo" className="hover:text-blue-500">
+                useeffectdemo
               </Link>
             </li>
             <li>
