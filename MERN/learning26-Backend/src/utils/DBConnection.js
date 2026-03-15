@@ -1,13 +1,12 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose")
+require("dotenv").config()
 
-const dbConnection = ()=>{
-
-    mongoose.connect("mongodb://127.0.0.1:27017/2026_internship_learning").then(()=>{
-        console.log("db connected")
-    }).catch((err)=>{
-        console.log("database not connted..",err)
+const DBConnection = ()=>{
+    mongoose.connect(process.env.MONGO_URL).then(()=>{
+        console.log("DB connected")
+    }).catch((e)=>{
+        console.log(e)
     })
-
 }
-
-module.exports = dbConnection
+module.exports = DBConnection
+    

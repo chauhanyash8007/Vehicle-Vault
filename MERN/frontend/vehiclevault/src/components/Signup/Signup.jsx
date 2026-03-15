@@ -1,62 +1,32 @@
-import { useState } from "react";
+import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 
 const Signup = () => {
+
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm();
 
-  const [errors, setErrors] = useState({});
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const password = watch("password");
 
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const submitHandler = async (data) => {
+    try {
+      const res = await axios.post("/user/register", data);
 
-  const validate = () => {
-    const newErrors = {};
-
-    if (!form.name.trim()) {
-      newErrors.name = "Full name is required";
-    }
-
-    if (!form.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
-      newErrors.email = "Enter a valid email";
-    }
-
-    if (!form.password) {
-      newErrors.password = "Password is required";
-    } else if (form.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    if (!form.confirmPassword) {
-      newErrors.confirmPassword = "Confirm your password";
-    } else if (form.password !== form.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    return newErrors;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const validationErrors = validate();
-    setErrors(validationErrors);
-
-    if (Object.keys(validationErrors).length === 0) {
-      // later connect to backend API
-      navigate("/Home");
+      if (res.status === 201) {
+        toast.success("User registered successfully");
+        navigate("/Login");
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Signup failed");
     }
   };
 
@@ -67,19 +37,35 @@ const Signup = () => {
           Create Account
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Name */}
+        <form onSubmit={handleSubmit(submitHandler)} className="space-y-5">
+
+          {/* First Name */}
           <div>
             <input
               type="text"
-              name="name"
-              placeholder="Full Name"
-              value={form.name}
-              onChange={handleChange}
+              placeholder="First Name"
               className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:border-blue-500"
+              {...register("firstName", { required: "First name is required" })}
             />
-            {errors.name && (
-              <p className="text-red-400 text-sm mt-1">{errors.name}</p>
+            {errors.firstName && (
+              <p className="text-red-400 text-sm mt-1">
+                {errors.firstName.message}
+              </p>
+            )}
+          </div>
+
+          {/* Last Name */}
+          <div>
+            <input
+              type="text"
+              placeholder="Last Name"
+              className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:border-blue-500"
+              {...register("lastName", { required: "Last name is required" })}
+            />
+            {errors.lastName && (
+              <p className="text-red-400 text-sm mt-1">
+                {errors.lastName.message}
+              </p>
             )}
           </div>
 
@@ -87,14 +73,20 @@ const Signup = () => {
           <div>
             <input
               type="email"
-              name="email"
               placeholder="Email Address"
-              value={form.email}
-              onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:border-blue-500"
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /\S+@\S+\.\S+/,
+                  message: "Enter a valid email",
+                },
+              })}
             />
             {errors.email && (
-              <p className="text-red-400 text-sm mt-1">{errors.email}</p>
+              <p className="text-red-400 text-sm mt-1">
+                {errors.email.message}
+              </p>
             )}
           </div>
 
@@ -102,14 +94,20 @@ const Signup = () => {
           <div>
             <input
               type="password"
-              name="password"
               placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:border-blue-500"
+              {...register("password", {
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+              })}
             />
             {errors.password && (
-              <p className="text-red-400 text-sm mt-1">{errors.password}</p>
+              <p className="text-red-400 text-sm mt-1">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
@@ -117,15 +115,17 @@ const Signup = () => {
           <div>
             <input
               type="password"
-              name="confirmPassword"
               placeholder="Confirm Password"
-              value={form.confirmPassword}
-              onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:border-blue-500"
+              {...register("confirmPassword", {
+                required: "Confirm your password",
+                validate: (value) =>
+                  value === password || "Passwords do not match",
+              })}
             />
             {errors.confirmPassword && (
               <p className="text-red-400 text-sm mt-1">
-                {errors.confirmPassword}
+                {errors.confirmPassword.message}
               </p>
             )}
           </div>
@@ -145,6 +145,7 @@ const Signup = () => {
               Login
             </Link>
           </p>
+
         </form>
       </div>
     </div>

@@ -1,21 +1,48 @@
+import axios from "axios";
 import React from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function Signup() {
 
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors }
   } = useForm();
 
-  const password = watch("password");
+  const navigate = useNavigate()
 
-  const onSubmit = (data) => {
-    console.log(data);
-  };
 
+  // const submitHandler = async(data) => {
+  //   console.log("data..",data);
+  //   //axios.post("http://localhost:3000/user/register")
+  //   const res = await axios.post("/user/register",data)
+
+  //   console.log("response..",res)
+  //   console.log("response.data..",res.data)
+  //   console.log("response.data.data..",res.data.data)
+  //   console.log("status",res.status)
+  //   if(res.status==201){
+  //     toast.success("User registered successfully")
+  //     navigate("/") // / -->login -->check your routes in AppRouter.jsx
+  //   }
+  // };
+
+  const submitHandler = async (data) => {
+  try {
+    const res = await axios.post("/user/register", data)
+
+    if (res.status === 201) {
+      toast.success("User registered successfully")
+      navigate("/")
+    }
+
+  } catch (err) {
+    toast.error(err?.response?.data?.message || "Signup failed")
+  }
+}
   return (
     <div className="min-h-screen flex">
 
@@ -35,18 +62,31 @@ export default function Signup() {
           <h2 className="text-3xl font-bold mb-2">Create Account 🚀</h2>
           <p className="text-gray-500 mb-6">Signup to get started</p>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(submitHandler)} className="space-y-4">
 
             {/* NAME */}
             <div>
               <input
                 type="text"
-                placeholder="Full Name"
+                placeholder="First Name"
                 className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                {...register("name", { required: "Name is required" })}
+                {...register("firstName", { required: "First Name is required" })}
               />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+              {errors.firstName && (
+                <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
+              )}
+            </div>
+
+            {/* LAST NAME */}
+            <div>
+              <input
+                type="text"
+                placeholder="Last Name"
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                {...register("lastName", { required: "Last Name is required" })}
+              />
+              {errors.lastName && (
+                <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>
               )}
             </div>
 
@@ -83,23 +123,7 @@ export default function Signup() {
             </div>
 
             {/* CONFIRM PASSWORD */}
-            <div>
-              <input
-                type="password"
-                placeholder="Confirm Password"
-                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                {...register("confirmPassword", {
-                  required: "Confirm your password",
-                  validate: (value) =>
-                    value === password || "Passwords do not match"
-                })}
-              />
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.confirmPassword.message}
-                </p>
-              )}
-            </div>
+         
 
             {/* BUTTON */}
             <button

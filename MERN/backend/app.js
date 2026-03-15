@@ -1,11 +1,23 @@
-import express from "express";
-const app = express();
+const express = require("express")
+const app = express()
+const cors = require("cors")
 
-import dbConnection from "./src/utils/DBConnection.js";
-dbConnection()
+//load env file.. using process
+require("dotenv").config()
+app.use(express.json())
+app.use(cors()) //allow all requests
 
-//server creation...
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`server started on PORT ${PORT}`);
-});
+const DBConnection = require("./src/utils/DBConnection")
+DBConnection()
+
+const userRoutes = require("./src/routes/UserRoutes")
+app.use("/user",userRoutes)
+
+
+
+
+const PORT = process.env.PORT
+app.listen(PORT,()=>{
+    console.log(`server started on port ${PORT}`)
+})
+//server creation
