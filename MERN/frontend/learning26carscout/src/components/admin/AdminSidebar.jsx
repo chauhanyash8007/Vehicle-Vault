@@ -38,6 +38,11 @@ export const AdminSidebar = () => {
               Settings
             </Link>
           </li>
+          <li>
+            <Link to="/admin/createproduct" className="block hover:text-blue-400">
+              createproduct
+            </Link>
+          </li>
 
           <li>
             <button className="bg-red-500 px-3 py-1 rounded hover:bg-red-600">
