@@ -1,48 +1,36 @@
-import { useState } from "react";
+import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-  const [errors, setErrors] = useState({});
+  const submitHandler = async (data) => {
+    try {
+      const res = await axios.post("/user/login", data);
 
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  };
+      if (res.status === 200) {
+        toast.success("Login Success");
 
-  const validate = () => {
-    const newErrors = {};
-
-    if (!form.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
-      newErrors.email = "Enter a valid email";
-    }
-
-    if (!form.password) {
-      newErrors.password = "Password is required";
-    }
-
-    return newErrors;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const validationErrors = validate();
-    setErrors(validationErrors);
-
-    if (Object.keys(validationErrors).length === 0) {
-      // later connect backend authentication
-      navigate("/");
+        // Role-based navigation
+        if (res.data.role === "user" || res.data.role === "USER") {
+          navigate("/");
+        } else if (res.data.role === "admin" || res.data.role === "ADMIN") {
+          navigate("/");
+        } else {
+          toast.error("Invalid Role");
+          navigate("/");
+        }
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Login failed");
     }
   };
 
@@ -53,23 +41,30 @@ const Login = () => {
           Sign In
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit(submitHandler)} className="space-y-5">
+
           {/* Email */}
           <div>
             <label className="text-white/80 text-sm">Email</label>
 
             <input
               type="email"
-              name="email"
               placeholder="Enter your email"
               autoComplete="email"
-              value={form.email}
-              onChange={handleChange}
               className="w-full mt-1 px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:border-blue-500"
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /\S+@\S+\.\S+/,
+                  message: "Enter a valid email",
+                },
+              })}
             />
 
             {errors.email && (
-              <p className="text-red-400 text-sm mt-1">{errors.email}</p>
+              <p className="text-red-400 text-sm mt-1">
+                {errors.email.message}
+              </p>
             )}
           </div>
 
@@ -79,16 +74,22 @@ const Login = () => {
 
             <input
               type="password"
-              name="password"
               placeholder="Enter your password"
               autoComplete="current-password"
-              value={form.password}
-              onChange={handleChange}
               className="w-full mt-1 px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:border-blue-500"
+              {...register("password", {
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Minimum 6 characters",
+                },
+              })}
             />
 
             {errors.password && (
-              <p className="text-red-400 text-sm mt-1">{errors.password}</p>
+              <p className="text-red-400 text-sm mt-1">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
@@ -107,6 +108,7 @@ const Login = () => {
               Sign Up
             </Link>
           </p>
+
         </form>
       </div>
     </div>

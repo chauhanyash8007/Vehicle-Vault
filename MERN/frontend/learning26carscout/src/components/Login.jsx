@@ -5,42 +5,39 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 export default function Login() {
-
   //all hooks will be declare at component level..
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm();
 
-  const submitHandler = async(data) => {
+  const submitHandler = async (data) => {
+    try {
+      const res = await axios.post("/user/login", data);
+      console.log("response..", res);
 
-    //{email:"",password:""}
-    try{
-      const res = await axios.post("https://node5.onrender.com/user/login",data)
-      console.log("response...",res); //axios object
-      console.log("response data...",res.data); //actual data
-      if(res.status==200){
-        //alert("login success")
-        toast.success("login success")
-        //check role in api response..
-        navigate("/user")
+      if (res.status == 200) {
+        toast.success("Login Sucess");
+        //navigation -->role based navigation
+        if (res.data.role == "user" || res.data.role == "USER") {
+          navigate("/user"); //check this url must present in appRoutes for user
+        } else if (res.data.role == "admin" || res.data.role == "ADMIN") {
+          navigate("/admin"); //check this url must present in appRoutes for admin
+        } else {
+          toast.error("Invalid Role");
+          navigate("/"); //redirect again to login..
+        }
       }
-  }catch(err){
-      console.log("error...",err);
-      //alert("login failed")
-      toast.error("Login failed..")
-  }
-
-    
-    //console.log("data...",data);
+    } catch (err) {
+      toast.error(err.response.data.message);
+    }
   };
 
   return (
     <div className="min-h-screen flex">
-
       {/* LEFT SIDE IMAGE */}
       <div className="hidden md:flex w-1/2 h-screen">
         <img
@@ -53,12 +50,10 @@ export default function Login() {
       {/* RIGHT SIDE FORM */}
       <div className="flex items-center justify-center w-full md:w-1/2 px-6">
         <div className="w-full max-w-md">
-
           <h2 className="text-3xl font-bold mb-2">Welcome Back 👋</h2>
           <p className="text-gray-500 mb-6">Please login to continue</p>
 
-           <form onSubmit={handleSubmit(submitHandler)} className="space-y-4">
-
+          <form onSubmit={handleSubmit(submitHandler)} className="space-y-4">
             {/* EMAIL */}
             <div>
               <input
@@ -66,7 +61,7 @@ export default function Login() {
                 placeholder="Email"
                 className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                 {...register("email", {
-                  required: "Email is required"
+                  required: "Email is required",
                 })}
               />
               {errors.email && (
@@ -86,8 +81,8 @@ export default function Login() {
                   required: "Password is required",
                   minLength: {
                     value: 6,
-                    message: "Minimum 6 characters"
-                  }
+                    message: "Minimum 6 characters",
+                  },
                 })}
               />
               {errors.password && (
@@ -104,12 +99,9 @@ export default function Login() {
             >
               Login
             </button>
-
           </form>
-
         </div>
       </div>
-
     </div>
   );
 }
