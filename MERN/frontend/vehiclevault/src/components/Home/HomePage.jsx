@@ -95,7 +95,7 @@ const Homepage = () => {
               </Link>
 
               <Link
-                to="/login"
+                to="/Login"
                 className="bg-linear-to-r from-blue-600 to-purple-600 text-white px-5 py-2 rounded-xl hover:opacity-90"
               >
                 Sign In

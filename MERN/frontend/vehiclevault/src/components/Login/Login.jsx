@@ -42,7 +42,7 @@ const Login = () => {
 
     if (Object.keys(validationErrors).length === 0) {
       // later connect backend authentication
-      navigate("/Home");
+      navigate("/");
     }
   };
 
