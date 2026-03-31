@@ -1,11 +1,10 @@
-
 const cors = require("cors");
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  "http://localhost:3000"
+  "http://localhost:3000",
 ].filter(Boolean);
 
 const corsOptions = {
@@ -16,7 +15,7 @@ const corsOptions = {
       callback(new Error("CORS policy not allowed origin"));
     }
   },
-  credentials: true
+  credentials: true,
 };
 
 module.exports = cors(corsOptions);
