@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, formatApiError } from "../api/client";
 import { useAuth } from "../state/AuthContext";
@@ -24,6 +24,9 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+
+  const vehicleCount = vehicles.length;
+  const selectedCount = selected.length;
 
   async function fetchVehicles() {
     setLoading(true);
@@ -62,32 +65,63 @@ export default function HomePage() {
     }
   }
 
+  const stats = useMemo(() => ({
+    "Total Vehicles": vehicleCount,
+    "Selected for Compare": selectedCount,
+    "Favorite Vehicle": message ? 1 : 0
+  }), [vehicleCount, selectedCount, message]);
+
   return (
-    <div className="space-y-6">
-      <section className="rounded-2xl bg-gradient-to-r from-brand-700 to-brand-500 p-6 text-white">
-        <h1 className="text-2xl font-bold md:text-3xl">Smart Car Comparison & Recommendations</h1>
-        <p className="mt-2 text-brand-50">
-          Filter, compare 2-3 vehicles, view deep specs, and save favorites.
-        </p>
+    <div className="space-y-8">
+      <section className="rounded-3xl bg-gradient-to-r from-brand-700 via-brand-600 to-brand-500 p-8 text-white shadow-lg">
+        <div className="mx-auto max-w-5xl space-y-4">
+          <h1 className="text-3xl font-black md:text-5xl">Vehicle Vault</h1>
+          <p className="text-lg text-brand-100 md:text-xl">
+            Professional vehicle comparison and recommendation platform for smart buyers. Find the best cars, compare specs and pick with confidence.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button onClick={() => window.scrollTo({ top: 450, behavior: "smooth" })} className="rounded-lg bg-white px-6 py-3 font-semibold text-brand-700 transition hover:bg-slate-100">
+              Start Comparing
+            </button>
+            <button onClick={() => navigate("/notifications")} className="rounded-lg border border-white px-6 py-3 font-semibold text-white transition hover:bg-white/20">
+              Latest Notifications
+            </button>
+          </div>
+        </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4">
-        <div className="grid gap-3 md:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Object.entries(stats).map(([label, value]) => (
+          <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-xs uppercase tracking-wider text-slate-500">{label}</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-xl font-bold">Find the Right Vehicle</h2>
+        <div className="grid gap-3 lg:grid-cols-4">
           {Object.keys(initialFilters).map(key => (
             <input
               key={key}
               value={filters[key]}
               onChange={e => setFilters(prev => ({ ...prev, [key]: e.target.value }))}
-              placeholder={key}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+              placeholder={
+                key === "q"
+                  ? "Search by name, brand, engine..."
+                  : key === "minPrice"
+                  ? "Min Price"
+                  : key === "maxPrice"
+                  ? "Max Price"
+                  : key.charAt(0).toUpperCase() + key.slice(1)
+              }
+              className="rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
             />
           ))}
         </div>
-        <div className="mt-3 flex gap-2">
-          <button
-            onClick={fetchVehicles}
-            className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
-          >
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button onClick={fetchVehicles} className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700">
             Apply Filters
           </button>
           <button
@@ -95,45 +129,47 @@ export default function HomePage() {
               setFilters(initialFilters);
               setTimeout(fetchVehicles, 0);
             }}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-100"
+            className="rounded-xl border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
           >
             Reset
           </button>
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Compare Selection ({selected.length}/3)</h2>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-bold">Select Vehicles for Comparison ({selectedCount}/3)</h2>
           <button
-            disabled={selected.length < 2}
+            disabled={selectedCount < 2}
             onClick={() => navigate("/compare", { state: { selected } })}
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             Compare Now
           </button>
         </div>
-        <p className="text-xs text-slate-500">Select at least 2 and at most 3 vehicles.</p>
+        <p className="mb-3 text-sm text-slate-500">Select 2-3 vehicles to generate an intelligent comparison report.</p>
+
+        {message && <p className="mb-2 text-sm text-emerald-600">{message}</p>}
+        {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
+
+        {loading ? (
+          <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-slate-500">Loading vehicles...</div>
+        ) : vehicles.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-slate-500">No vehicles found. Try broadening your filters.</div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {vehicles.map(vehicle => (
+              <VehicleCard
+                key={vehicle._id}
+                vehicle={vehicle}
+                selected={selected.includes(vehicle._id)}
+                onCompareToggle={toggleCompare}
+                onFavorite={addFavorite}
+              />
+            ))}
+          </div>
+        )}
       </section>
-
-      {message && <p className="text-sm text-emerald-600">{message}</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-
-      {loading ? (
-        <p>Loading vehicles...</p>
-      ) : (
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {vehicles.map(vehicle => (
-            <VehicleCard
-              key={vehicle._id}
-              vehicle={vehicle}
-              selected={selected.includes(vehicle._id)}
-              onCompareToggle={toggleCompare}
-              onFavorite={addFavorite}
-            />
-          ))}
-        </section>
-      )}
     </div>
   );
 }
