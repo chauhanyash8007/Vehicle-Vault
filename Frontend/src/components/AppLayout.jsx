@@ -5,7 +5,7 @@ const navItems = [
   { to: "/", label: "Vehicles" },
   { to: "/compare", label: "Compare" },
   { to: "/favorites", label: "Favorites" },
-  { to: "/notifications", label: "Notifications" }
+  { to: "/notifications", label: "Notifications" },
 ];
 
 export default function AppLayout() {
@@ -15,18 +15,23 @@ export default function AppLayout() {
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white shadow-sm">
         <div className="container-shell flex items-center justify-between py-4">
-          <Link to="/" className="text-xl font-black text-brand-700 md:text-2xl">
+          <Link
+            to="/"
+            className="text-xl font-black text-brand-700 md:text-2xl"
+          >
             Vehicle Vault
           </Link>
 
           <nav className="hidden items-center gap-3 md:flex">
-            {navItems.map(item => (
+            {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
                   `rounded-lg px-3 py-2 text-sm font-medium ${
-                    isActive ? "bg-brand-100 text-brand-700" : "text-slate-600 hover:bg-slate-100"
+                    isActive
+                      ? "bg-brand-100 text-brand-700"
+                      : "text-slate-600 hover:bg-slate-100"
                   }`
                 }
               >
@@ -38,7 +43,9 @@ export default function AppLayout() {
                 to="/admin"
                 className={({ isActive }) =>
                   `rounded-lg px-3 py-2 text-sm font-medium ${
-                    isActive ? "bg-brand-100 text-brand-700" : "text-slate-600 hover:bg-slate-100"
+                    isActive
+                      ? "bg-brand-100 text-brand-700"
+                      : "text-slate-600 hover:bg-slate-100"
                   }`
                 }
               >
@@ -50,7 +57,9 @@ export default function AppLayout() {
           <div className="flex items-center gap-2">
             {isLoggedIn ? (
               <>
-                <span className="hidden text-sm text-slate-600 sm:inline">Welcome, {auth?.name}</span>
+                <span className="hidden text-sm text-slate-600 sm:inline">
+                  Welcome, {auth?.name}
+                </span>
                 <button
                   onClick={logout}
                   className="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-700"
@@ -88,7 +97,8 @@ export default function AppLayout() {
 
       <footer className="border-t border-slate-200 bg-white py-6">
         <div className="container-shell text-center text-sm text-slate-500">
-          Vehicle Vault © {new Date().getFullYear()} | Built with MERN and Tailwind CSS
+          Vehicle Vault © {new Date().getFullYear()} | Built with MERN and
+          Tailwind CSS
         </div>
       </footer>
     </div>
