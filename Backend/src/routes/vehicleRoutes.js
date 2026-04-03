@@ -1,5 +1,3 @@
-// src/routes/vehicleRoutes.js
-
 const express = require("express");
 const router = express.Router();
 
@@ -9,7 +7,7 @@ const {
   createVehicle,
   updateVehicle,
   deleteVehicle,
-  getVehicleRecommendations
+  getVehicleRecommendations,
 } = require("../controllers/vehicleController");
 
 const protect = require("../middleware/authMiddleware");
@@ -18,12 +16,12 @@ const upload = require("../utils/upload");
 
 // Public
 router.get("/", getVehicles);
-router.get("/:id", getVehicleById);
 router.get("/:id/recommendations", getVehicleRecommendations);
+router.get("/:id", getVehicleById);
 
 // Admin only
 router.post("/", protect, isAdmin, upload.array("images", 5), createVehicle);
-router.put("/:id", protect, isAdmin, updateVehicle);
+router.put("/:id", protect, isAdmin, upload.array("images", 5), updateVehicle);
 router.delete("/:id", protect, isAdmin, deleteVehicle);
 
 module.exports = router;

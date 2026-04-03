@@ -1,5 +1,3 @@
-// src/config/logger.js
-
 const morgan = require("morgan");
 
 const logger = morgan("dev");

@@ -1,14 +1,19 @@
-
 const mongoose = require("mongoose");
-
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      dbName: "vehicle_vault"
+    const conn = await mongoose.connect(process.env.MONGO_URI);
+    console.log(
+      `✅ MongoDB Connected: ${conn.connection.host} / ${conn.connection.name}`,
+    );
+
+    mongoose.connection.on("error", (err) => {
+      console.error("❌ MongoDB runtime error:", err.message);
     });
 
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    mongoose.connection.on("disconnected", () => {
+      console.warn("⚠️  MongoDB disconnected");
+    });
   } catch (error) {
     console.error("❌ MongoDB Connection Error:", error.message);
     process.exit(1);

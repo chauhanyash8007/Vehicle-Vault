@@ -1,19 +1,11 @@
-// src/routes/reviewRoutes.js
-
 const express = require("express");
 const router = express.Router();
 
-const {
-  addReview,
-  getReviews
-} = require("../controllers/reviewController");
-
+const { addReview, getReviews, deleteReview } = require("../controllers/reviewController");
 const protect = require("../middleware/authMiddleware");
 
-// Add review → login required
 router.post("/", protect, addReview);
-
-// View reviews → public
 router.get("/:vehicleId", getReviews);
+router.delete("/:id", protect, deleteReview);
 
 module.exports = router;

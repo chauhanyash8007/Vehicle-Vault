@@ -1,18 +1,12 @@
-// src/routes/favoriteRoutes.js
-
 const express = require("express");
 const router = express.Router();
 
-const {
-  addFavorite,
-  getFavorites
-} = require("../controllers/favoriteController");
-
+const { addFavorite, getFavorites, removeFavorite } = require("../controllers/favoriteController");
 const protect = require("../middleware/authMiddleware");
 
-// All favorites are user-specific → must be protected
 router.post("/", protect, addFavorite);
 router.get("/", protect, getFavorites);
-router.get("/:userId", protect, getFavorites);
+router.get("/user/:userId", protect, getFavorites);
+router.delete("/:id", protect, removeFavorite);
 
 module.exports = router;

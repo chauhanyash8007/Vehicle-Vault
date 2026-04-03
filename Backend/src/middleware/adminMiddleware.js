@@ -1,5 +1,3 @@
-// src/middleware/adminMiddleware.js
-
 const isAdmin = (req, res, next) => {
   try {
     if (req.user && req.user.role === "admin") {

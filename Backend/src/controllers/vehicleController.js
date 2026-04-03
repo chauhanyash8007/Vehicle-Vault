@@ -1,8 +1,10 @@
-// src/controllers/vehicleController.js
-
 const Vehicle = require("../models/Vehicle");
 const Accessory = require("../models/Accessory");
 const AdminLog = require("../models/AdminLog");
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 const getVehicles = async (req, res) => {
   try {
@@ -16,14 +18,17 @@ const getVehicles = async (req, res) => {
       maxMileage,
       q,
       page = 1,
-      limit = 10
+      limit = 10,
+      withMeta,
     } = req.query;
 
     const filter = {};
 
-    if (brand) filter.brand = new RegExp(`^${brand}$`, "i");
-    if (fuel_type) filter.fuel_type = new RegExp(`^${fuel_type}$`, "i");
-    if (transmission) filter.transmission = new RegExp(`^${transmission}$`, "i");
+    if (brand) filter.brand = new RegExp(`^${escapeRegex(brand)}`, "i");
+    if (fuel_type)
+      filter.fuel_type = new RegExp(`^${escapeRegex(fuel_type)}`, "i");
+    if (transmission)
+      filter.transmission = new RegExp(`^${escapeRegex(transmission)}`, "i");
 
     if (minPrice || maxPrice) {
       filter.price = {};
@@ -38,10 +43,11 @@ const getVehicles = async (req, res) => {
     }
 
     if (q) {
+      const escaped = escapeRegex(q);
       filter.$or = [
-        { name: { $regex: q, $options: "i" } },
-        { brand: { $regex: q, $options: "i" } },
-        { engine: { $regex: q, $options: "i" } }
+        { name: { $regex: escaped, $options: "i" } },
+        { brand: { $regex: escaped, $options: "i" } },
+        { engine: { $regex: escaped, $options: "i" } },
       ];
     }
 
@@ -51,18 +57,18 @@ const getVehicles = async (req, res) => {
 
     const [vehicles, total] = await Promise.all([
       Vehicle.find(filter).sort({ createdAt: -1 }).skip(skip).limit(safeLimit),
-      Vehicle.countDocuments(filter)
+      Vehicle.countDocuments(filter),
     ]);
 
-    if (req.query.withMeta === "true") {
+    if (withMeta === "true") {
       return res.json({
         data: vehicles,
         pagination: {
           total,
           page: safePage,
           limit: safeLimit,
-          totalPages: Math.ceil(total / safeLimit)
-        }
+          totalPages: Math.ceil(total / safeLimit),
+        },
       });
     }
 
@@ -75,11 +81,7 @@ const getVehicles = async (req, res) => {
 const getVehicleById = async (req, res) => {
   try {
     const vehicle = await Vehicle.findById(req.params.id);
-
-    if (!vehicle) {
-      return res.status(404).json({ message: "Vehicle not found" });
-    }
-
+    if (!vehicle) return res.status(404).json({ message: "Vehicle not found" });
     return res.json(vehicle);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -97,33 +99,69 @@ const createVehicle = async (req, res) => {
       engine,
       transmission,
       features,
-      specifications
+      specifications,
+      imageUrls,
     } = req.body;
 
-    // ✅ SAFE IMAGE HANDLING (FINAL FIX)
-    const images = req.files
-      ? req.files.map(file => file.path)
-      : req.file
-      ? [req.file.path]
-      : [];
+    if (!name || !brand || !price || !fuel_type || !mileage) {
+      return res
+        .status(400)
+        .json({
+          message: "name, brand, price, fuel_type, and mileage are required",
+        });
+    }
+
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      images = req.files.map((file) => file.path);
+    } else if (imageUrls) {
+      try {
+        const parsed = JSON.parse(imageUrls);
+        images = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+      } catch {
+        images = imageUrls
+          .split(",")
+          .map((u) => u.trim())
+          .filter(Boolean);
+      }
+    }
+
+    let parsedFeatures = features;
+    if (typeof features === "string") {
+      try {
+        parsedFeatures = JSON.parse(features);
+      } catch {
+        parsedFeatures = [];
+      }
+    }
+
+    let parsedSpecs = specifications;
+    if (typeof specifications === "string") {
+      try {
+        parsedSpecs = JSON.parse(specifications);
+      } catch {
+        parsedSpecs = {};
+      }
+    }
 
     const vehicle = await Vehicle.create({
       name,
       brand,
-      price,
+      price: Number(price),
       fuel_type,
-      mileage,
+      mileage: Number(mileage),
       engine,
       transmission,
-      features,
-      specifications,
-      images
+      features: Array.isArray(parsedFeatures) ? parsedFeatures : [],
+      specifications:
+        parsedSpecs && typeof parsedSpecs === "object" ? parsedSpecs : {},
+      images,
     });
 
     if (req.user?._id) {
       await AdminLog.create({
         admin_id: req.user._id,
-        action: `Created vehicle ${vehicle.name}`
+        action: `Created vehicle: ${vehicle.name}`,
       });
     }
 
@@ -136,18 +174,49 @@ const createVehicle = async (req, res) => {
 const updateVehicle = async (req, res) => {
   try {
     const vehicle = await Vehicle.findById(req.params.id);
+    if (!vehicle) return res.status(404).json({ message: "Vehicle not found" });
 
-    if (!vehicle) {
-      return res.status(404).json({ message: "Vehicle not found" });
+    const updates = { ...req.body };
+
+    if (typeof updates.features === "string") {
+      try {
+        updates.features = JSON.parse(updates.features);
+      } catch {
+        delete updates.features;
+      }
+    }
+    if (typeof updates.specifications === "string") {
+      try {
+        updates.specifications = JSON.parse(updates.specifications);
+      } catch {
+        delete updates.specifications;
+      }
     }
 
-    Object.assign(vehicle, req.body);
+    if (req.files && req.files.length > 0) {
+      updates.images = req.files.map((f) => f.path);
+    } else if (updates.imageUrls) {
+      try {
+        const parsed = JSON.parse(updates.imageUrls);
+        updates.images = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+      } catch {
+        updates.images = updates.imageUrls
+          .split(",")
+          .map((u) => u.trim())
+          .filter(Boolean);
+      }
+      delete updates.imageUrls;
+    } else {
+      delete updates.images;
+    }
+
+    Object.assign(vehicle, updates);
     await vehicle.save();
 
     if (req.user?._id) {
       await AdminLog.create({
         admin_id: req.user._id,
-        action: `Updated vehicle ${vehicle.name}`
+        action: `Updated vehicle: ${vehicle.name}`,
       });
     }
 
@@ -160,17 +229,14 @@ const updateVehicle = async (req, res) => {
 const deleteVehicle = async (req, res) => {
   try {
     const vehicle = await Vehicle.findById(req.params.id);
-
-    if (!vehicle) {
-      return res.status(404).json({ message: "Vehicle not found" });
-    }
+    if (!vehicle) return res.status(404).json({ message: "Vehicle not found" });
 
     await vehicle.deleteOne();
 
     if (req.user?._id) {
       await AdminLog.create({
         admin_id: req.user._id,
-        action: `Deleted vehicle ${vehicle.name}`
+        action: `Deleted vehicle: ${vehicle.name}`,
       });
     }
 
@@ -183,35 +249,32 @@ const deleteVehicle = async (req, res) => {
 const getVehicleRecommendations = async (req, res) => {
   try {
     const vehicle = await Vehicle.findById(req.params.id);
+    if (!vehicle) return res.status(404).json({ message: "Vehicle not found" });
 
-    if (!vehicle) {
-      return res.status(404).json({ message: "Vehicle not found" });
-    }
+    const orConditions = [];
+    if (vehicle.brand) orConditions.push({ brand: vehicle.brand });
+    if (vehicle.fuel_type) orConditions.push({ fuel_type: vehicle.fuel_type });
+    if (vehicle.transmission)
+      orConditions.push({ transmission: vehicle.transmission });
+    orConditions.push({
+      price: {
+        $gte: Math.max(0, vehicle.price - 500000),
+        $lte: vehicle.price + 500000,
+      },
+    });
 
     const similarVehicles = await Vehicle.find({
       _id: { $ne: vehicle._id },
-      $or: [
-        { brand: vehicle.brand },
-        { fuel_type: vehicle.fuel_type },
-        { transmission: vehicle.transmission },
-        {
-          price: {
-            $gte: Math.max(0, vehicle.price - 500000),
-            $lte: vehicle.price + 500000
-          }
-        }
-      ]
+      $or: orConditions,
     })
       .limit(6)
       .sort({ createdAt: -1 });
 
-    const accessories = await Accessory.find({ vehicle_id: vehicle._id }).limit(10);
+    const accessories = await Accessory.find({ vehicle_id: vehicle._id }).limit(
+      10,
+    );
 
-    return res.json({
-      vehicle_id: vehicle._id,
-      similarVehicles,
-      accessories
-    });
+    return res.json({ vehicle_id: vehicle._id, similarVehicles, accessories });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -223,5 +286,5 @@ module.exports = {
   createVehicle,
   updateVehicle,
   deleteVehicle,
-  getVehicleRecommendations
+  getVehicleRecommendations,
 };

@@ -1,5 +1,3 @@
-// src/models/User.js
-
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -7,46 +5,44 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     email: {
       type: String,
       required: true,
       unique: true,
-      lowercase: true
+      lowercase: true,
     },
 
     password: {
       type: String,
       required: true,
-      minlength: 6
+      minlength: 6,
     },
 
     role: {
       type: String,
       enum: ["user", "admin"],
-      default: "user"
+      default: "user",
     },
 
-    // 🔹 Block system
     isBlocked: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
-    // 🔹 Forgot Password
     resetPasswordToken: {
-      type: String
+      type: String,
     },
 
     resetPasswordExpire: {
-      type: Date
-    }
+      type: Date,
+    },
   },
   {
-    timestamps: { createdAt: "created_at", updatedAt: false }
-  }
+    timestamps: { createdAt: "created_at", updatedAt: false },
+  },
 );
 
 module.exports = mongoose.model("User", userSchema);

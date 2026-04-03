@@ -6,8 +6,12 @@ const STORAGE_KEY = "vehicle_vault_auth";
 
 export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
   });
 
   useEffect(() => {
@@ -19,6 +23,13 @@ export function AuthProvider({ children }) {
       localStorage.removeItem(STORAGE_KEY);
     }
   }, [auth]);
+
+  // Listen for 401 auto-logout event from api interceptor
+  useEffect(() => {
+    const handler = () => setAuth(null);
+    window.addEventListener("vv:unauthorized", handler);
+    return () => window.removeEventListener("vv:unauthorized", handler);
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -37,9 +48,9 @@ export function AuthProvider({ children }) {
       },
       logout() {
         setAuth(null);
-      }
+      },
     }),
-    [auth]
+    [auth],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

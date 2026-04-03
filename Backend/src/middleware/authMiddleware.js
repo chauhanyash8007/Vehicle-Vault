@@ -1,5 +1,3 @@
-// src/middleware/authMiddleware.js
-
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
@@ -9,7 +7,7 @@ const protect = async (req, res, next) => {
 
     if (
       req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
+      req.headers.authorization.startsWith("Bearer ")
     ) {
       token = req.headers.authorization.split(" ")[1];
     }
@@ -18,7 +16,17 @@ const protect = async (req, res, next) => {
       return res.status(401).json({ message: "Not authorized, no token" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtErr) {
+      if (jwtErr.name === "TokenExpiredError") {
+        return res
+          .status(401)
+          .json({ message: "Token expired, please login again" });
+      }
+      return res.status(401).json({ message: "Invalid token" });
+    }
 
     const user = await User.findById(decoded.id).select("-password");
 
@@ -27,14 +35,13 @@ const protect = async (req, res, next) => {
     }
 
     if (user.isBlocked) {
-      return res.status(403).json({ message: "User is blocked" });
+      return res.status(403).json({ message: "Your account has been blocked" });
     }
 
     req.user = user;
-
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Token failed" });
+    return res.status(500).json({ message: "Authentication error" });
   }
 };
 

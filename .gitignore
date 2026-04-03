@@ -36,3 +36,6 @@ coverage/
 # Misc
 *.tgz
 *.gz
+
+# text files
+seed.js

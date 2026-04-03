@@ -43,10 +43,9 @@ app.use(cookieParser());
 // ================= LOGGER =================
 app.use(logger);
 
-// ================= HEALTH CHECK =================
 app.get("/", (req, res) => {
   res.status(200).json({
-    message: "Vehicle Vault API is running 🚗"
+    message: "Vehicle Vault API is running 🚗",
   });
 });
 
@@ -63,8 +62,18 @@ app.use("/api/admin", adminRoutes);
 // ================= 404 HANDLER =================
 app.use((req, res) => {
   res.status(404).json({
-    message: "Route not found"
+    message: "Route not found",
   });
+});
+
+app.use((err, req, res, next) => {
+  if (err.name === "MulterError") {
+    return res.status(400).json({ message: `Upload error: ${err.message}` });
+  }
+  if (err.message === "Only image files are allowed") {
+    return res.status(400).json({ message: err.message });
+  }
+  next(err);
 });
 
 // ================= GLOBAL ERROR HANDLER =================
