@@ -3,8 +3,9 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../state/AuthContext";
 
 const NAV = [
-  { to: "/", label: "Vehicles", exact: true, icon: "🚗" },
-  { to: "/compare", label: "Compare", icon: "⚖️" },
+  { to: "/",          label: "Home",     exact: true, icon: "🏠" },
+  { to: "/vehicles",  label: "Vehicles", exact: true, icon: "🚗" },
+  { to: "/compare",   label: "Compare",  icon: "⚖️" },
   { to: "/favorites", label: "Favorites", icon: "♥" },
   { to: "/notifications", label: "Updates", icon: "🔔" },
 ];
