@@ -8,15 +8,19 @@ const {
   updateVehicle,
   deleteVehicle,
   getVehicleRecommendations,
+  getAIRecommendations,
+  getAutocomplete,
 } = require("../controllers/vehicleController");
 
 const protect = require("../middleware/authMiddleware");
 const isAdmin = require("../middleware/adminMiddleware");
 const upload = require("../utils/upload");
 
-// Public
+// Public — specific routes BEFORE /:id
+router.get("/autocomplete", getAutocomplete);
 router.get("/", getVehicles);
 router.get("/:id/recommendations", getVehicleRecommendations);
+router.get("/:id/ai-recommendations", getAIRecommendations);
 router.get("/:id", getVehicleById);
 
 // Admin only

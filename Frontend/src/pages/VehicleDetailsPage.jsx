@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, formatApiError } from "../api/client";
 import { useAuth } from "../state/AuthContext";
 import { useToast } from "../components/Toast";
+import AIRecommendations from "../components/AIRecommendations";
 
 const PH = "https://placehold.co/800x450/e2e8f0/94a3b8?text=No+Image";
 
@@ -399,6 +400,9 @@ export default function VehicleDetailsPage() {
           )}
         </div>
       </section>
+
+      {/* ── AI Recommendations ── */}
+      <AIRecommendations vehicleId={id} />
 
       {/* ── Reviews ── */}
       <section className="grid gap-5 lg:grid-cols-2">

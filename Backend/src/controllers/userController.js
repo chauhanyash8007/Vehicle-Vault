@@ -176,29 +176,21 @@ const simpleResetPassword = async (req, res) => {
     const { password } = req.body;
 
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and new password are required" });
+      return res.status(400).json({ message: "Email and new password are required" });
     }
 
     if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 6 characters" });
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: "No account found with that email" });
+      return res.status(404).json({ message: "No account found with that email" });
     }
 
     if (user.isBlocked) {
-      return res
-        .status(403)
-        .json({ message: "Your account has been blocked. Contact support." });
+      return res.status(403).json({ message: "Your account has been blocked. Contact support." });
     }
 
     user.password = await bcrypt.hash(password, 10);
@@ -212,10 +204,138 @@ const simpleResetPassword = async (req, res) => {
   }
 };
 
+// 🔹 GET PROFILE — with full activity data
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password -resetPasswordToken -resetPasswordExpire");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const Review = require("../models/Review");
+    const Favorite = require("../models/Favorite");
+    const Comparison = require("../models/Comparison");
+
+    const [reviewCount, favoriteCount, comparisonCount, recentFavorites, recentReviews, recentComparisons] = await Promise.all([
+      Review.countDocuments({ user_id: req.user._id }),
+      Favorite.countDocuments({ user_id: req.user._id }),
+      Comparison.countDocuments({ user_id: req.user._id }),
+      // Recent favorites with vehicle details
+      Favorite.find({ user_id: req.user._id })
+        .populate("vehicle_id", "name brand price images fuel_type")
+        .sort({ created_at: -1 })
+        .limit(4),
+      // Recent reviews with vehicle details
+      Review.find({ user_id: req.user._id })
+        .populate("vehicle_id", "name brand images")
+        .sort({ createdAt: -1 })
+        .limit(4),
+      // Recent comparisons
+      Comparison.find({ user_id: req.user._id })
+        .populate("vehicles", "name brand images price")
+        .sort({ createdAt: -1 })
+        .limit(3),
+    ]);
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isBlocked: user.isBlocked,
+      created_at: user.created_at,
+      stats: { reviews: reviewCount, favorites: favoriteCount, comparisons: comparisonCount },
+      recentFavorites,
+      recentReviews,
+      recentComparisons,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// 🔹 UPDATE PROFILE
+const updateProfile = async (req, res) => {
+  try {
+    const { name, currentPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Update name
+    if (name?.trim()) {
+      user.name = name.trim();
+    }
+
+    // Update password if provided
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: "Current password is required to set a new password" });
+      }
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters" });
+      }
+      user.password = await bcrypt.hash(newPassword, 10);
+    }
+
+    await user.save();
+
+    const token = generateToken(user._id, user.role);
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      token,
+      message: "Profile updated successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// 🔹 DELETE ACCOUNT
+const deleteAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password) return res.status(400).json({ message: "Password is required to delete your account" });
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Incorrect password" });
+
+    if (user.role === "admin") return res.status(400).json({ message: "Admin accounts cannot be deleted" });
+
+    // Delete user and all their data
+    const Review = require("../models/Review");
+    const Favorite = require("../models/Favorite");
+    const Comparison = require("../models/Comparison");
+
+    await Promise.all([
+      user.deleteOne(),
+      Review.deleteMany({ user_id: req.user._id }),
+      Favorite.deleteMany({ user_id: req.user._id }),
+      Comparison.deleteMany({ user_id: req.user._id }),
+    ]);
+
+    res.json({ message: "Account deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   forgotPassword,
   resetPassword,
   simpleResetPassword,
+  getProfile,
+  updateProfile,
+  deleteAccount,
 };

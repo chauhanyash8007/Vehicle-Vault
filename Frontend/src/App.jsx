@@ -10,6 +10,7 @@ import VehicleDetailsPage from "./pages/VehicleDetailsPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ProfilePage from "./pages/ProfilePage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -37,6 +38,14 @@ function App() {
         />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/vehicles/:id" element={<VehicleDetailsPage />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/admin"
           element={

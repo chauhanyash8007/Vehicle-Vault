@@ -4,6 +4,7 @@ import { api, formatApiError } from "../api/client";
 import { useAuth } from "../state/AuthContext";
 import { useToast } from "../components/Toast";
 import VehicleCard from "../components/VehicleCard";
+import SearchAutocomplete from "../components/SearchAutocomplete";
 
 const INIT = { q: "", brand: "", fuel_type: "", transmission: "", minPrice: "", maxPrice: "", minMileage: "", maxMileage: "" };
 const FUELS = ["Petrol", "Diesel", "Electric", "Hybrid", "CNG"];
@@ -107,18 +108,15 @@ export default function VehiclesPage() {
       {/* ── Search & Filters ── */}
       <section className="card p-5">
         <div className="flex gap-3">
-          <div className="relative flex-1">
-            <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              value={filters.q}
-              onChange={(e) => setFilters((p) => ({ ...p, q: e.target.value }))}
-              onKeyDown={(e) => e.key === "Enter" && applyFilters()}
-              placeholder="Search by name, brand, engine..."
-              className="input pl-10"
-            />
-          </div>
+          <SearchAutocomplete
+            initialValue={filters.q}
+            onSearch={(val) => {
+              setFilters((p) => ({ ...p, q: val }));
+              setAppliedFilters((p) => ({ ...p, q: val }));
+              setPage(1);
+              fetchVehicles(1, { ...appliedFilters, q: val });
+            }}
+          />
           <button
             onClick={() => setFiltersOpen((v) => !v)}
             className={`btn-secondary flex items-center gap-2 ${filtersOpen ? "border-brand-300 bg-brand-50 text-brand-700" : ""}`}

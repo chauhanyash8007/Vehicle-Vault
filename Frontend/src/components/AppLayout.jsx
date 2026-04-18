@@ -86,7 +86,7 @@ export default function AppLayout() {
           <div className="flex items-center gap-2">
             {isLoggedIn ? (
               <div className="flex items-center gap-2">
-                <div className="hidden sm:flex items-center gap-2 rounded-xl border border-surface-200 bg-surface-50 px-3 py-1.5">
+                <Link to="/profile" className="hidden sm:flex items-center gap-2 rounded-xl border border-surface-200 bg-surface-50 px-3 py-1.5 hover:bg-surface-100 transition">
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
                     {auth?.name?.[0]?.toUpperCase() || "U"}
                   </div>
@@ -96,7 +96,7 @@ export default function AppLayout() {
                   {isAdmin && (
                     <span className="badge-brand text-[10px]">Admin</span>
                   )}
-                </div>
+                </Link>
                 <button
                   onClick={logout}
                   className="btn-secondary btn-sm hidden sm:flex"
@@ -169,12 +169,14 @@ export default function AppLayout() {
             </nav>
             <div className="mt-3 divider pt-3 flex gap-2">
               {isLoggedIn ? (
-                <button
-                  onClick={logout}
-                  className="btn-secondary btn-sm w-full"
-                >
-                  Sign out ({auth?.name})
-                </button>
+                <>
+                  <Link to="/profile" className="btn-secondary btn-sm flex-1 text-center">
+                    My Profile
+                  </Link>
+                  <button onClick={logout} className="btn-secondary btn-sm flex-1">
+                    Sign out
+                  </button>
+                </>
               ) : (
                 <>
                   <Link

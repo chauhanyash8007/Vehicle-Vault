@@ -31,6 +31,18 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener("vv:unauthorized", handler);
   }, []);
 
+  // Listen for profile updates from other tabs / same-tab storage writes
+  useEffect(() => {
+    const handler = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) setAuth(JSON.parse(raw));
+      } catch { /* ignore */ }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
   const value = useMemo(
     () => ({
       auth,
