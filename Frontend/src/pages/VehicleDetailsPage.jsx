@@ -81,6 +81,7 @@ export default function VehicleDetailsPage() {
   }
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
     loadAll();
   }, [id]);
 

@@ -46,12 +46,12 @@ export default function VehicleCard({
       )}
 
       {/* Image */}
-      <div className="relative h-48 w-full overflow-hidden bg-surface-100">
+      <div className="relative h-52 w-full overflow-hidden bg-surface-100">
         {rawUrl && !imgError ? (
           <img
             src={imageUrl}
             alt={vehicle.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={() => setImgError(true)}
           />
         ) : (
